@@ -154,7 +154,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 		conOpt.setConnectionTimeout(timeout);
 		conOpt.setKeepAliveInterval(keepalive);
 		if (!username
-				.equals(com.boyaa.customer.service.main.ActivityConstants.empty)) {
+				.equals(org.eclipse.paho.main.ActivityConstants.empty)) {
 			conOpt.setUserName(username);
 		}
 		if (!password.equals(ActivityConstants.empty)) {
@@ -216,7 +216,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 
 第1点和第2点配合起来看
 
-//com.boyaa.customer.service.main.Connections
+//org.eclipse.paho.main.Connections
 
 	public MqttAndroidClient createClient(Context context, String serverURI, String clientId)
 	{
@@ -240,7 +240,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 
 点开源码，我们看到，第1点就是创建了一个 MqttAndroidClient 对象，并将其创建的实例 传入 Connection 的构造函数中,并且调用 addConnection ，以 connection.handle()（其为clientHandle， 即 uri + clientId）为key，所创建的connection为vaule，将其存入一个Map中。
 
-备注：com.boyaa.customer.service.main.Connections 是一个单例类，并管理  Connection ，而Connection是持有MqttAndroidClient实例，因此，可以 通过 Connection 获得 MqttAndroidClient实例。
+备注：org.eclipse.paho.main.Connections 是一个单例类，并管理  Connection ，而Connection是持有MqttAndroidClient实例，因此，可以 通过 Connection 获得 MqttAndroidClient实例。
 
 第3点添加了一个MqttCallback 对象，其用于处理
 
@@ -430,7 +430,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 
 <font color="red">主要是通过 获取 intent中MqttServiceConstants.CALLBACK_ACTION 来分发动作，以MqttServiceConstants.CONNECT_ACTION为例</font>
 
-//com.boyaa.customer.service.service.MqttAndroidClient
+//org.eclipse.paho.service.MqttAndroidClient
 
 	private void connectAction(Bundle data) {
 		//还记得这里的 connectToken吗？其是在调用MqttAndroidClient：connect方法的时候传入的IMqttActionListener构成的IMqttToken
@@ -457,7 +457,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 		}
 	}
 
-//com.boyaa.customer.service.service.MqttTokenAndroid
+//org.eclipse.paho.service.MqttTokenAndroid
 
 	void notifyComplete() {
 	    synchronized (waitObject) {
@@ -514,7 +514,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 
 **针对第一点：**
 
-// com.boyaa.customer.service.service.MqttService
+// org.eclipse.paho.service.MqttService
 
 	private Map<String/* clientHandle */, MqttConnection/* client */> connections = new ConcurrentHashMap<String, MqttConnection>();
 
@@ -539,7 +539,7 @@ step1:触发connect动作，设置ActionListener以及addCallback
 **针对第二点：**
 
 
-// com.boyaa.customer.service.service.MqttService
+// org.eclipse.paho.service.MqttService
 
 	  public void connect(String clientHandle, MqttConnectOptions connectOptions,
 	      String invocationContext, String activityToken)
@@ -644,7 +644,7 @@ ok，上面，我们看到，服务端的 代表 mqtt请求对象 MqttConnection
 #### 代表service端 MqttConnection对象 的建立
 
 从上文得知 MqttConnection 对象 是在 MqttService:getClient()方法中创建的。
-// com.boyaa.customer.service.service.MqttConnection
+// org.eclipse.paho.service.MqttConnection
 
 	MqttConnection(MqttService service, String serverURI, String clientId,
 			MqttClientPersistence persistence, String clientHandle) {
@@ -657,7 +657,7 @@ ok，上面，我们看到，服务端的 代表 mqtt请求对象 MqttConnection
 
 其中 ，
 
-//com.boyaa.customer.service.service.MqttAndroidClient
+//org.eclipse.paho.service.MqttAndroidClient
 
 	String clientHandle = serverURI + ":" + clientId+":"+contextId;
 	contextId = myContext.getApplicationInfo().packageName；
@@ -683,7 +683,7 @@ MqttCallback 又是什么呢？
 
 其实也 ActionListener逻辑一样：
 
-//com.boyaa.customer.service.service.MqttAndroidClient
+//org.eclipse.paho.service.MqttAndroidClient
 
 	public void setCallback(MqttCallback callback) {
 		this.callback = callback;
@@ -868,7 +868,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 
 #### MqttAsyncClient connect方法的调用
 
-//com.boyaa.customer.service.client.mqttv3.MqttAsyncClient
+//org.eclipse.paho.client.mqttv3.MqttAsyncClient
 
 	public MqttAsyncClient(String serverURI, String clientId, MqttClientPersistence persistence, MqttPingSender pingSender) {
 		final String methodName = "MqttAsyncClient";		
@@ -914,7 +914,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 * ConnectActionListener 创建，并调用connect方法。
 > This class handles the connection of the AsyncClient to one of the available URLs,简单来说，是对当前tcp请求的一次抽象。
 
-//com.boyaa.customer.service.client.mqttv3.MqttAsyncClient
+//org.eclipse.paho.client.mqttv3.MqttAsyncClient
 
 	private NetworkModule createNetworkModule(String address, MqttConnectOptions options) throws MqttException, MqttSecurityException {	
 		String shortAddress = address.substring(6);
@@ -930,7 +930,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 		return netModule;
 	}
 
-// com.boyaa.customer.service.client.mqttv3.internal.NetworkModule
+// org.eclipse.paho.client.mqttv3.internal.NetworkModule
 
 	public interface NetworkModule {
 		public void start() throws IOException, MqttException;
@@ -952,7 +952,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 * 通过建立 代表 本次链接请求的 ConnectActionListener 进行链接；其构造函数中传入MqttToken用于跟踪ActionListener，传入ClientComms，实际操作mqtt链接（因为其 setNetworkModules ,也就是说 ，拥有Socket）
 * ClientComms 持有Socket,并且持有 MqttCallback 回调
 
-// com.boyaa.customer.service.client.mqttv3.MqttAsyncClient
+// org.eclipse.paho.client.mqttv3.MqttAsyncClient
 
 	public void setCallback(MqttCallback callback) {
 		comms.setCallback(callback);
@@ -961,7 +961,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 
 这里我们做个猜想，我们知道 ClientComms 持有 Socket,那么应该 真正的Socket 请求是由 ClientComms 发起的，此外，我们知道 ConnectActionListener 持有 ClientComms 实例。
 
-//com.boyaa.customer.service.client.mqttv3.internal.ConnectActionListener
+//org.eclipse.paho.client.mqttv3.internal.ConnectActionListener
 
 	  public void connect() throws MqttPersistenceException {
 
@@ -1005,7 +1005,7 @@ ok，总结下，目前来看 这一层貌似已经解耦
 
 终于到了ClientComms 的connect方法了，较之前，我们猜想，真正的Socket链接会在 ClientComms 中发生。
 
-//com.boyaa.customer.service.client.mqttv3.internal.ClientComms
+//org.eclipse.paho.client.mqttv3.internal.ClientComms
 
 	public void connect(MqttConnectOptions options, MqttToken token) throws MqttException {
 		final String methodName = "connect";
@@ -1060,7 +1060,7 @@ MqttWireMessage：代表一个 Mqtt 消息
 
 >An on-the-wire representation of an MQTT message.
 
-//com.boyaa.customer.service.client.mqttv3.internal.ClientComms:ConnectBG
+//org.eclipse.paho.client.mqttv3.internal.ClientComms:ConnectBG
 
 		public void run() {
 			final String methodName = "connectBG:run";
@@ -1137,7 +1137,7 @@ ok，因为我们现在处理的 connect请求，也就是说要向服务器发�
 
 #### 处理 Socket 发送消息 CommsSende
 
-// com.boyaa.customer.service.client.mqttv3.internal.CommsSender
+// org.eclipse.paho.client.mqttv3.internal.CommsSender
 
 	public class CommsSender implements Runnable{}
 
@@ -1147,7 +1147,7 @@ ok，因为我们现在处理的 connect请求，也就是说要向服务器发�
 
 言归正传。
 
-// com.boyaa.customer.service.client.mqttv3.internal.CommsSender
+// org.eclipse.paho.client.mqttv3.internal.CommsSender
 
 	public void run() {
 		final String methodName = "run";
@@ -1217,7 +1217,7 @@ MqttAck:确认消息
 
 是一个 阻塞方法，clientState 是何方神圣，其是 ClientState 实例，掌握着消息的动态，那么，下来就让我们一睹 clientState.get() 的芳颜。
 
-// com.boyaa.customer.service.client.mqttv3.internal.ClientState
+// org.eclipse.paho.client.mqttv3.internal.ClientState
 
 	protected MqttWireMessage get() throws MqttException {
 		final String methodName = "get";
@@ -1290,7 +1290,7 @@ MqttAck:确认消息
 	volatile private Vector pendingFlows;
 
 
-// com.boyaa.customer.service.client.mqttv3.internal.ClientState
+// org.eclipse.paho.client.mqttv3.internal.ClientState
 
 	public void send(MqttWireMessage message, MqttToken token) throws MqttException {
 		final String methodName = "send";
@@ -1325,7 +1325,7 @@ MqttAck:确认消息
 
 其实，上文已提到，是在 ConnectBG 线程中 ，通过调用
 
-//com.boyaa.customer.service.client.mqttv3.internal.ClientComms:ConnectBG
+//org.eclipse.paho.client.mqttv3.internal.ClientComms:ConnectBG
 
 	void internalSend(MqttWireMessage message, MqttToken token) throws MqttException {
 		final String methodName = "internalSend";
@@ -1362,7 +1362,7 @@ ok，消息 发送完毕，回调如何处理呢？还记得 传入给 ConnectBG
 
 为了看回调的处理，我们需要 重新看下 ClientComms的构造方法
 
-//com.boyaa.customer.service.client.mqttv3.internal.ClientComms
+//org.eclipse.paho.client.mqttv3.internal.ClientComms
 
 	public ClientComms(IMqttAsyncClient client, MqttClientPersistence persistence, MqttPingSender pingSender) throws MqttException {
 		this.conState = DISCONNECTED;
@@ -1382,7 +1382,7 @@ ok，消息 发送完毕，回调如何处理呢？还记得 传入给 ConnectBG
 对，看到这里有一个 CommsCallback 对象，其持有 ClientComms 当前实例，并且 setClientState(clientState);
 此外，在ConnectBG线程中
 
-//com.boyaa.customer.service.client.mqttv3.internal.ClientComms:ConnectBG
+//org.eclipse.paho.client.mqttv3.internal.ClientComms:ConnectBG
 
 		public void run() {
 			。。。。。
@@ -1395,7 +1395,7 @@ ok，消息 发送完毕，回调如何处理呢？还记得 传入给 ConnectBG
 
 我们现在知道，该 CommsCallback 持有一个 ClientState ，而ClientState 又持有一个 CommsTokenStore， CommsTokenStore 有存入了 Message:Token的键值关系。
 
-// com.boyaa.customer.service.client.mqttv3.internal.CommsCallback:run
+// org.eclipse.paho.client.mqttv3.internal.CommsCallback:run
 
 	public void run() {
 		final String methodName = "run";
@@ -1501,9 +1501,9 @@ ok，消息 发送完毕，回调如何处理呢？还记得 传入给 ConnectBG
 
 也即是说 ，客户端 设置的  MqttCallback 回调是在 CommsCallback 的handleMessage 进行回调处理的；
 
-至于，Token的分发，是在 com.boyaa.customer.service.client.mqttv3.internal.CommsReceiver 接收到消息之后，通知CommsCallback ，从而使得 callback的run方法 notify。调用handleActionComplete（Token）进行分发。
+至于，Token的分发，是在 org.eclipse.paho.client.mqttv3.internal.CommsReceiver 接收到消息之后，通知CommsCallback ，从而使得 callback的run方法 notify。调用handleActionComplete（Token）进行分发。
 
-// com.boyaa.customer.service.client.mqttv3.internal.CommsCallback
+// org.eclipse.paho.client.mqttv3.internal.CommsCallback
 
 	private void handleActionComplete(MqttToken token)
 			throws MqttException {
